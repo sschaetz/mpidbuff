@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   else if(world.rank() == 1)
   {
     wrapper w2;
-    mpi_recv_workaround(0, 0, w2, world); // bad stuff happens
+    mpi_recv_workaround(0, 0, w2, world);
     BOOST_TEST_EQ(s1, w2.ptr->i);
     BOOST_TEST_EQ(s2, w2.ptr->j);
   }

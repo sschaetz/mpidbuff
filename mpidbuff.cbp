@@ -6,31 +6,51 @@
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Debug">
-				<Option output="bin/Debug/mpidbuff" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+			<Target title="test_window">
+				<Option output="bin/test/test_window" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-g" />
-				</Compiler>
+				<Option use_console_runner="0" />
 			</Target>
-			<Target title="Release">
-				<Option output="bin/Release/mpidbuff" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+			<Target title="test_mpi_workaround">
+				<Option output="bin/test/test_mpi_workaround" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-O2" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
+				<Option use_console_runner="0" />
+			</Target>
+			<Target title="test_master_slave">
+				<Option output="bin/test/test_master_slave" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="/usr/include/mpi/" />
 		</Compiler>
+		<Linker>
+			<Add library="libboost_mpi" />
+			<Add directory="/usr/local/lib" />
+		</Linker>
+		<Unit filename="README">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="lib/mpi_workaround.hpp" />
+		<Unit filename="lib/window.hpp" />
+		<Unit filename="src/window.cpp" />
+		<Unit filename="test/master_slave.cpp">
+			<Option target="test_master_slave" />
+		</Unit>
+		<Unit filename="test/mpi_workaround.cpp">
+			<Option target="test_mpi_workaround" />
+		</Unit>
+		<Unit filename="test/window.cpp">
+			<Option target="test_window" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

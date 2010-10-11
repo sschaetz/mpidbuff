@@ -30,11 +30,12 @@ boost::mpi::status mpi_recv_workaround(int source, int tag, T& value,
 {
   // receive a string
   std::string s;
-  comm.recv(source, tag, s);
+  boost::mpi::status st = comm.recv(source, tag, s);
   // serialize into T
   std::istringstream iss(s);
   boost::archive::text_iarchive ia(iss);
   ia >> value;
+  return st;
 }
 
 #endif // MPI_WORKAROUND_HPP

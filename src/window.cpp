@@ -1,6 +1,6 @@
 #include <exception>
 #include <boost/throw_exception.hpp>
-#include "window.hpp"
+#include "../lib/window.hpp"
 
 namespace boost {
   namespace mpi {
@@ -177,9 +177,9 @@ bool window::test() const
 
 // _____________________________________________________________________________
 
-void window::lock(int lock_type, int rank) const
+void window::lock(lock_type lock_type_, int rank) const
 {
-  BOOST_MPI_CHECK_RESULT(MPI_Win_lock, (lock_type, rank, 0, win));
+  BOOST_MPI_CHECK_RESULT(MPI_Win_lock, (lock_type_, rank, 0, win));
 }
 
 // _____________________________________________________________________________
