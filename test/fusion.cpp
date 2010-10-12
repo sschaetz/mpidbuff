@@ -66,12 +66,14 @@ class wrapper
   boost::shared_ptr<base> ptr;
 };
 
-void func1(int a, char b, std::string c)
+
+struct func1
 {
-  std::cout << a << b << c << std::endl;
-}
-
-
+  void operator()(int a, char b, std::string c)
+  {
+    std::cout << a << b << c << std::endl;
+  }
+};
 
 template <typename T>
 class testclass : public base
@@ -82,8 +84,8 @@ class testclass : public base
 
   void execute()
   {
-
-    invoke(func1, t);
+    func1 f;
+    invoke_procedure(f, t);
   }
 
   std::string s;
