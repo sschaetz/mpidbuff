@@ -1,6 +1,6 @@
 #include <string>
 #include <iostream>
-
+#include <fstream>
 #include <boost/mpi.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/shared_ptr.hpp>
