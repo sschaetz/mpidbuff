@@ -34,27 +34,48 @@ struct print_xml
     }
 };
 
+template <typename T>
+class testclass
+{
+  public:
+   testclass() {}
+   testclass(std::string s_, T t_) : s(s_), t(t_) {}
+
+   std::string s;
+   T t;
+
+ private:
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & s;
+    ar & t;
+  }
+};
+
 
 int main(int argc, char* argv[])
 {
 
-  vector<int, char, std::string> w1(make_vector(1, 'x', "howdy"));
+  testclass<vector<int, char, std::string> >
+    w1("hi", make_vector(1, 'x', "howdy"));
   // save data to archive
   {
     std::ofstream ofs("archive.bin");
     boost::archive::text_oarchive oa(ofs);
     oa << w1;
-    for_each(w1, print_xml());
+    for_each(w1.t, print_xml());
 
   }
 
-  vector<int, char, std::string> w2;
+  testclass<vector<int, char, std::string> > w2;
   // load data from archive
   {
     std::ifstream ifs("archive.bin");
     boost::archive::text_iarchive ia(ifs);
     ia >> w2;
-    for_each(w2, print_xml());
+    for_each(w2.t, print_xml());
 
   }
 
