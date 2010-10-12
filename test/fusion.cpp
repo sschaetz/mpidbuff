@@ -20,6 +20,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+
 #include <ext/fusion/serialization/include.hpp>
 
 #include "lib/mpi_workaround.hpp"
@@ -71,20 +72,22 @@ void func1(int a, char b, std::string c)
 }
 
 
+
 template <typename T>
 class testclass : public base
 {
-  public:
-   testclass() {}
-   testclass(std::string s_, T t_) : s(s_), t(t_) {}
+ public:
+  testclass() {}
+  testclass(std::string s_, T t_) : s(s_), t(t_) {}
 
-   void execute()
-   {
-     invoke(func1, t);
-   }
+  void execute()
+  {
 
-   std::string s;
-   T t;
+    invoke(func1, t);
+  }
+
+  std::string s;
+  T t;
 
  private:
   friend class boost::serialization::access;
@@ -97,19 +100,19 @@ class testclass : public base
   }
 };
 
-
+typedef testclass<vector<int, char, std::string> > func1_type;
 
 namespace boost {
 namespace archive {
 namespace detail {
 namespace {
 template<>
-struct init_guid< testclass<vector<int, char, std::string> > > {
-    static guid_initializer< testclass<vector<int, char, std::string> > > const & g;
+struct init_guid< func1_type > {
+    static guid_initializer< func1_type > const & g;
 };
-guid_initializer< testclass<vector<int, char, std::string> > > const & init_guid< testclass<vector<int, char, std::string> > >::g =
+guid_initializer< func1_type > const & init_guid< func1_type >::g =
     ::boost::serialization::singleton<
-        guid_initializer< testclass<vector<int, char, std::string> > >
+        guid_initializer< func1_type >
     >::get_mutable_instance().export_guid();
 }}}}
 
@@ -117,10 +120,10 @@ guid_initializer< testclass<vector<int, char, std::string> > > const & init_guid
 namespace boost {
 namespace serialization {
 template<>
-struct guid_defined< testclass<vector<int, char, std::string> > > : boost::mpl::true_ {};
+struct guid_defined< func1_type > : boost::mpl::true_ {};
 template<>
-inline const char * guid< testclass<vector<int, char, std::string> > >(){
-    return "testclass<vector<int, char, std::string> >";
+inline const char * guid< func1_type >(){
+    return "func1_type";
 }
 } /* serialization */
 } /* boost */
@@ -137,8 +140,8 @@ int main(int argc, char* argv[])
   if(world.rank() == 0) // test with wrapper
   {
     wrapper w;
-    w.ptr = boost::shared_ptr<testclass<vector<int, char, std::string> > >
-      (new testclass<vector<int, char, std::string> >
+    w.ptr = boost::shared_ptr<func1_type >
+      (new func1_type
         ("hi", make_vector(1, 'x', "howdy")));
     w.ptr->execute();
     mpi_send_workaround(1, 0, w, world);
