@@ -19,6 +19,8 @@
 #include <boost/fusion/adapted/mpl.hpp>
 #include <boost/fusion/include/mpl.hpp>
 
+#include <ext/fusion/serialization/include.hpp>
+
 struct myftor
 {
   double operator()(int i, int j)
@@ -34,10 +36,22 @@ class slave
   typedef typename boost::function_types::function_type< Func_params >::type Func_type;
   typedef typename boost::fusion::result_of::as_vector< Params >::type Fusion_type;
 
+  struct params
+  {
+    Fusion_type p;
+   private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & p;
+    }
+  };
 
  public:
   Retval execute(boost::function< Func_type > f, Fusion_type s)
   {
+    std::cout << typeid(*this).name() << std::endl;
     return boost::fusion::invoke(f, s);
   }
 
