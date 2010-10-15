@@ -39,6 +39,18 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 			</Target>
+			<Target title="test_mpl">
+				<Option output="bin/test/test_mpl" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+			</Target>
+			<Target title="test_iterator">
+				<Option output="bin/test/test_iterator" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -51,6 +63,30 @@
 		</Linker>
 		<Unit filename="README">
 			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="dev/func1.cpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/func1.hpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/func2.cpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/func2.hpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/iterator.hpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/iterator_launchers.hpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/main.cpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/masterslave.hpp">
+			<Option target="test_iterator" />
 		</Unit>
 		<Unit filename="ext/fusion/serialization/include.hpp" />
 		<Unit filename="ext/fusion/serialization/load.hpp" />
@@ -74,8 +110,11 @@
 		<Unit filename="test/mpi_workaround.cpp">
 			<Option target="test_mpi_workaround" />
 		</Unit>
+		<Unit filename="test/mpl.cpp">
+			<Option target="test_mpl" />
+		</Unit>
 		<Unit filename="test/window.cpp">
-			<Option target="test_window" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Extensions>
 			<code_completion />

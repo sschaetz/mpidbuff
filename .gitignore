@@ -2,3 +2,4 @@ mpidbuff.layout
 bin/
 obj/
 mpidbuff.depend
+archive.bin

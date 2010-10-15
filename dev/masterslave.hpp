@@ -1,6 +1,8 @@
 #ifndef DEV_MASTERSLAVE_HPP
 #define DEV_MASTERSLAVE_HPP
 
+#include <boost/shared_ptr.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 class base
 {

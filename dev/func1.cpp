@@ -1,8 +1,8 @@
 #include "func1.hpp"
 
 
-void func1::operator()(int a, char b, std::string c)
+void func1::operator()(int a, char b, double)
 {
-  std::cout << a << b << c << std::endl;
+  std::cout << "func1" << a << b << std::endl;
 }
 
