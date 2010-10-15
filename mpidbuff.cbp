@@ -85,7 +85,13 @@
 		<Unit filename="dev/main.cpp">
 			<Option target="test_iterator" />
 		</Unit>
+		<Unit filename="dev/master.hpp">
+			<Option target="test_iterator" />
+		</Unit>
 		<Unit filename="dev/masterslave.hpp">
+			<Option target="test_iterator" />
+		</Unit>
+		<Unit filename="dev/slave.hpp">
 			<Option target="test_iterator" />
 		</Unit>
 		<Unit filename="ext/fusion/serialization/include.hpp" />

@@ -15,7 +15,9 @@
 
 struct func2
 {
+  func2(boost::mpi::communicator & comm_) : comm(comm_){}
   void operator()(int, char, int, std::string);
+  boost::mpi::communicator comm;
 };
 
 
@@ -26,9 +28,9 @@ class func2_wrapper : public base
   func2_wrapper() {}
   func2_wrapper(T t_) : t(t_) {}
 
-  void execute()
+  void execute(boost::mpi::communicator & comm)
   {
-    func2 f;
+    func2 f(comm);
     invoke_procedure(f, t);
   }
 
@@ -44,11 +46,19 @@ class func2_wrapper : public base
   }
 };
 
-typedef func2_wrapper<boost::fusion::vector<int, char, int, std::string> > func2_type;
+namespace slave
+{
+  struct func2
+  {
+    typedef boost::fusion::vector<int, char, double, std::string> vector_type;
+    typedef func2_wrapper<boost::fusion::vector<int, char, double, std::string>
+                         > wrapper_type;
+  };
+}
 
 
-BOOST_CLASS_EXPORT_IMPLEMENT(func2_type);
-BOOST_CLASS_EXPORT_KEY(func2_type);
+BOOST_CLASS_EXPORT_IMPLEMENT(slave::func2::wrapper_type);
+BOOST_CLASS_EXPORT_KEY(slave::func2::wrapper_type);
 
 
 #endif // DEV_FUNC2_HPP

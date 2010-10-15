@@ -1,6 +1,7 @@
 #ifndef DEV_FUNC1_HPP
 #define DEV_FUNC1_HPP
 
+#include <boost/mpi/communicator.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
@@ -16,7 +17,9 @@
 
 struct func1
 {
+  func1(boost::mpi::communicator & comm_) : comm(comm_){}
   void operator()(int, char, double);
+  boost::mpi::communicator comm;
 };
 
 
@@ -27,9 +30,9 @@ class func1_wrapper : public base
   func1_wrapper() {}
   func1_wrapper(T t_) : t(t_) {}
 
-  void execute()
+  void execute(boost::mpi::communicator & comm)
   {
-    func1 f;
+    func1 f(comm);
     invoke_procedure(f, t);
   }
 
@@ -45,11 +48,19 @@ class func1_wrapper : public base
   }
 };
 
-typedef func1_wrapper<boost::fusion::vector<int, char, double> > func1_type;
+namespace slave
+{
+  struct func1
+  {
+    typedef boost::fusion::vector<int, char, double> vector_type;
+    typedef func1_wrapper<boost::fusion::vector<int, char, double> >
+      wrapper_type;
+  };
+}
 
 
-BOOST_CLASS_EXPORT_IMPLEMENT(func1_type);
-BOOST_CLASS_EXPORT_KEY(func1_type);
+BOOST_CLASS_EXPORT_IMPLEMENT(slave::func1::wrapper_type);
+BOOST_CLASS_EXPORT_KEY(slave::func1::wrapper_type);
 
 
 #endif // DEV_FUNC1_HPP
