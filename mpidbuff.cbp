@@ -64,34 +64,7 @@
 		<Unit filename="README">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="dev/func1.cpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/func1.hpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/func2.cpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/func2.hpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/iterator.hpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/iterator_launchers.hpp">
-			<Option target="test_iterator" />
-		</Unit>
 		<Unit filename="dev/main.cpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/master.hpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/masterslave.hpp">
-			<Option target="test_iterator" />
-		</Unit>
-		<Unit filename="dev/slave.hpp">
 			<Option target="test_iterator" />
 		</Unit>
 		<Unit filename="ext/fusion/serialization/include.hpp" />
@@ -101,6 +74,11 @@
 		<Unit filename="ext/fusion/serialization/save.hpp" />
 		<Unit filename="ext/fusion/serialization/saver.hpp" />
 		<Unit filename="ext/fusion/serialization/vector.hpp" />
+		<Unit filename="lib/masterworker/base.hpp" />
+		<Unit filename="lib/masterworker/master.hpp" />
+		<Unit filename="lib/masterworker/worker.hpp" />
+		<Unit filename="lib/masterworker/worker_function.hpp" />
+		<Unit filename="lib/masterworker/wrapper.hpp" />
 		<Unit filename="lib/mpi_workaround.hpp" />
 		<Unit filename="lib/window.hpp" />
 		<Unit filename="src/window.cpp" />

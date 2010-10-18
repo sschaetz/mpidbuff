@@ -1,8 +1,3 @@
-// the interface should look like this:
-//
-//slave<returnvalue, list of parameters>::execute
-//(functor that fits the prototype, make_vector<parameters>);
-
 #include <iostream>
 #include <string>
 #include <boost/function_types/function_type.hpp>
