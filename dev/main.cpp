@@ -1,9 +1,7 @@
 #include <boost/fusion/container/generation/make_vector.hpp>
 #include <boost/fusion/include/make_vector.hpp>
 
-#include <lib/masterworker/worker_function.hpp>
-#include <lib/masterworker/worker.hpp>
-#include <lib/masterworker/master.hpp>
+#include <lib/masterworker/masterworker.hpp>
 
 using namespace masterworker;
 
