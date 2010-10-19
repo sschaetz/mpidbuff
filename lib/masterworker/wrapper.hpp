@@ -21,7 +21,10 @@ namespace masterworker
    public:
     wrapper(boost::shared_ptr<base> ptr_) : ptr(ptr_) { quitflag = false; }
     wrapper() : quitflag(true) {  }
-    void execute(boost::mpi::communicator & comm) { ptr->execute(comm); }
+    void execute(boost::mpi::communicator & comm, int root = 0)
+    {
+      ptr->execute(comm, root);
+    }
     bool quit() { return quitflag; }
 
   };

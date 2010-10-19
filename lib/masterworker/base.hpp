@@ -9,7 +9,7 @@ namespace masterworker
   {
    public:
     base() {}
-    virtual void execute(boost::mpi::communicator & comm) {}
+    virtual void execute(boost::mpi::communicator & comm, int root = 0) {}
 
    private:
     friend class boost::serialization::access;

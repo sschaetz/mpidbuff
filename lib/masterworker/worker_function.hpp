@@ -8,6 +8,7 @@
 #include <boost/preprocessor/seq/seq.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/mpi/communicator.hpp>
+#include <boost/mpi/collectives.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
@@ -15,7 +16,10 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <ext/fusion/serialization/include.hpp>
+#include <boost/fusion/functional/invocation/invoke.hpp>
+#include <boost/function.hpp>
 
+#include <lib/masterworker/type_translation.hpp>
 #include <lib/masterworker/base.hpp>
 
 // helper macros to allow a sequence of tuples without double brackets _________
@@ -43,7 +47,9 @@
 // helper macro to generate a list of types (, T) from the parameters __________
 
 #define MASTER_WORKER_TYPELIST(r, data, elem)                                  \
-  , BOOST_PP_TUPLE_ELEM(2, 0, elem)                                            \
+  , masterworker::translate_argument_type<                                     \
+                                          BOOST_PP_TUPLE_ELEM(2, 0, elem)      \
+                                         >::type                               \
   /**/
 
 
@@ -54,22 +60,29 @@
   /**/
 
 
-// macro to generate worker function
+// macro to generate worker function ___________________________________________
 
-#define WORKER_FUNCTION(functionname, parameters)                              \
+#define WORKER_FUNCTION(returntype, functionname, parameters)                  \
 namespace masterworker                                                         \
 {                                                                              \
 struct functionname                                                            \
 {                                                                              \
-  functionname (boost::mpi::communicator & comm_) : comm(comm_){}              \
-  void operator()(                                                             \
-    BOOST_PP_TUPLE_ELEM(2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))) \
+  functionname (boost::mpi::communicator & comm_, int root_) :                 \
+  comm(comm_), root(root_){}                                                   \
+                                                                               \
+  translate_return_type< returntype > ::type operator()(                       \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 1, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
     BOOST_PP_SEQ_FOR_EACH(                                                     \
-      MASTER_WORKER_TYPELIST, _,                                               \
-      BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))                          \
+      MASTER_WORKER_ARGLIST, _, BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))\
     )                                                                          \
   );                                                                           \
   boost::mpi::communicator comm;                                               \
+  int root;                                                                    \
 };                                                                             \
 template <typename T>                                                          \
 class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
@@ -77,10 +90,24 @@ class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
  public:                                                                       \
   BOOST_PP_CAT(functionname, _wrapper) () {}                                   \
   BOOST_PP_CAT(functionname, _wrapper) (T t_) : t(t_) {}                       \
-  void execute(boost::mpi::communicator & comm)                                \
+  translate_return_type< returntype > ::type r;                                \
+  void execute(boost::mpi::communicator & comm, int root = 0)                  \
   {                                                                            \
-    functionname f(comm);                                                      \
-    invoke_procedure(f, t);                                                    \
+                                                                               \
+    functionname f(comm, root);                                                \
+    boost::function< translate_return_type< returntype > ::type (              \
+    translate_argument_type<                                                   \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(                                   \
+                                             MASTER_WORKER_PE(parameters)      \
+                                           )                                   \
+                         ) >::type                                             \
+    BOOST_PP_SEQ_FOR_EACH(MASTER_WORKER_TYPELIST, _,                           \
+                          BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))      \
+                         )                                                     \
+                          )> f2 = f;                                           \
+    r = invoke(f2, t);                                                         \
+    boost::mpi::gather(comm, r, root);                                         \
   }                                                                            \
   T t;                                                                         \
                                                                                \
@@ -100,7 +127,10 @@ namespace worker                                                               \
   struct functionname                                                          \
   {                                                                            \
     typedef boost::fusion::vector<                                             \
-    BOOST_PP_TUPLE_ELEM(2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))) \
+      masterworker::translate_argument_type<                                   \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters)))     \
+                                            > ::type                           \
     BOOST_PP_SEQ_FOR_EACH(                                                     \
       MASTER_WORKER_TYPELIST, _,                                               \
       BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))                          \
@@ -108,14 +138,125 @@ namespace worker                                                               \
     > vector_type;                                                             \
                                                                                \
     typedef BOOST_PP_CAT(functionname, _wrapper) <boost::fusion::vector<       \
-    BOOST_PP_TUPLE_ELEM(2, 0,                                                  \
-                        BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))        \
-                       )                                                       \
+    masterworker::translate_argument_type<                                     \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))      \
+                         )                > ::type                             \
     BOOST_PP_SEQ_FOR_EACH(MASTER_WORKER_TYPELIST, _,                           \
                           BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))      \
                          )                                                     \
                                                                        >       \
                                                 > wrapper_type;                \
+    typedef translate_return_type< returntype > ::type return_type;            \
+  };                                                                           \
+}                                                                              \
+                                                                               \
+BOOST_CLASS_EXPORT_IMPLEMENT(worker:: functionname ::wrapper_type);            \
+BOOST_CLASS_EXPORT_KEY(worker:: functionname ::wrapper_type);                  \
+                                                                               \
+                                                                               \
+translate_return_type< returntype > ::type functionname ::operator()(          \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 1, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
+    BOOST_PP_SEQ_FOR_EACH(                                                     \
+      MASTER_WORKER_ARGLIST, _, BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))\
+    )                                                                          \
+  )
+
+
+// macro to generate worker function without return type _______________________
+
+#define WORKER_VOID_FUNCTION(functionname, parameters)                         \
+namespace masterworker                                                         \
+{                                                                              \
+struct functionname                                                            \
+{                                                                              \
+  functionname (boost::mpi::communicator & comm_, int root_) :                 \
+  comm(comm_), root(root_){}                                                   \
+                                                                               \
+  void operator()(                                                             \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
+    BOOST_PP_TUPLE_ELEM(                                                       \
+      2, 1, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
+    )                                                                          \
+    BOOST_PP_SEQ_FOR_EACH(                                                     \
+      MASTER_WORKER_ARGLIST, _, BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))\
+    )                                                                          \
+  );                                                                           \
+  boost::mpi::communicator comm;                                               \
+  int root;                                                                    \
+};                                                                             \
+template <typename T>                                                          \
+class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
+{                                                                              \
+ public:                                                                       \
+  BOOST_PP_CAT(functionname, _wrapper) () {}                                   \
+  BOOST_PP_CAT(functionname, _wrapper) (T t_) : t(t_) {}                       \
+  int r;                                                                       \
+  void execute(boost::mpi::communicator & comm, int root = 0)                  \
+  {                                                                            \
+                                                                               \
+    functionname f(comm, root);                                                \
+    boost::function< void (                                                    \
+    translate_argument_type<                                                   \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(                                   \
+                                             MASTER_WORKER_PE(parameters)      \
+                                           )                                   \
+                         ) >::type                                             \
+    BOOST_PP_SEQ_FOR_EACH(MASTER_WORKER_TYPELIST, _,                           \
+                          BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))      \
+                         )                                                     \
+                          )> f2 = f;                                           \
+    invoke(f2, t);                                                             \
+    r = 0;                                                                     \
+    boost::mpi::gather(comm, r, root);                                         \
+  }                                                                            \
+  T t;                                                                         \
+                                                                               \
+ private:                                                                      \
+  friend class boost::serialization::access;                                   \
+  template<class Archive>                                                      \
+  void serialize(Archive & ar, const unsigned int version)                     \
+  {                                                                            \
+    ar & t;                                                                    \
+    ar & boost::serialization::base_object<base>( *this );                     \
+  }                                                                            \
+};                                                                             \
+}                                                                              \
+                                                                               \
+namespace worker                                                               \
+{                                                                              \
+  struct functionname                                                          \
+  {                                                                            \
+    typedef boost::fusion::vector<                                             \
+      masterworker::translate_argument_type<                                   \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters)))     \
+                                            > ::type                           \
+    BOOST_PP_SEQ_FOR_EACH(                                                     \
+      MASTER_WORKER_TYPELIST, _,                                               \
+      BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))                          \
+    )                                                                          \
+    > vector_type;                                                             \
+                                                                               \
+    typedef BOOST_PP_CAT(functionname, _wrapper) <boost::fusion::vector<       \
+    masterworker::translate_argument_type<                                     \
+      BOOST_PP_TUPLE_ELEM(2, 0,                                                \
+                          BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))      \
+                         )                > ::type                             \
+    BOOST_PP_SEQ_FOR_EACH(MASTER_WORKER_TYPELIST, _,                           \
+                          BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))      \
+                         )                                                     \
+                                                                       >       \
+                                                > wrapper_type;                \
+    typedef int return_type;                                                   \
   };                                                                           \
 }                                                                              \
                                                                                \
@@ -134,6 +275,7 @@ void functionname ::operator()(                                                \
       MASTER_WORKER_ARGLIST, _, BOOST_PP_SEQ_TAIL(MASTER_WORKER_PE(parameters))\
     )                                                                          \
   )
+
 
 
 #endif // LIB_MASTERWORKER_WORKER_FUNCTION_HPP

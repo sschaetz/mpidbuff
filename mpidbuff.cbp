@@ -76,6 +76,7 @@
 		<Unit filename="ext/fusion/serialization/vector.hpp" />
 		<Unit filename="lib/masterworker/base.hpp" />
 		<Unit filename="lib/masterworker/master.hpp" />
+		<Unit filename="lib/masterworker/masterworker.hpp" />
 		<Unit filename="lib/masterworker/worker.hpp" />
 		<Unit filename="lib/masterworker/worker_function.hpp" />
 		<Unit filename="lib/masterworker/wrapper.hpp" />

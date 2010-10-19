@@ -20,7 +20,7 @@ namespace masterworker
       }
       else
       {
-        w.execute(comm);
+        w.execute(comm, root);
       }
     }
   }
