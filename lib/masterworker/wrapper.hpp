@@ -5,6 +5,12 @@ namespace masterworker
 {
   class base;
 
+  /**
+   * @brief wrapper class
+   *
+   * contains a pointer to base to allow MPI transmission and serialization via
+   * base pointer
+   */
   class wrapper
   {
    private:

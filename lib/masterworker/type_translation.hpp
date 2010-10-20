@@ -4,7 +4,14 @@
 
 namespace masterworker
 {
-  // generic type translation __________________________________________________
+  /**
+   * The worker_function macro in some cases requires the argumenttypes without
+   * const or ref qualifier. These structures help to remove those qualifiers.
+   */
+
+  /**
+   * Generic type translators
+   */
   template <typename T>
   struct translate_type
   {
@@ -29,14 +36,18 @@ namespace masterworker
     typedef T type;
   };
 
-  // argument type translation _________________________________________________
+  /**
+   * Type translators for function arguments
+   */
   template <typename T>
   struct translate_argument_type
   {
     typedef typename translate_type<T>::type type;
   };
 
-  // parameter type translation ________________________________________________
+  /**
+   * Type translators for return types
+   */
   template <typename T>
   struct translate_return_type
   {

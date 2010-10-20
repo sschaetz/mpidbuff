@@ -5,6 +5,11 @@
 
 namespace masterworker
 {
+  /**
+   * @brief base class
+   *
+   * provides a generic interface to inheriting classes (the execute method)
+   */
   class base
   {
    public:

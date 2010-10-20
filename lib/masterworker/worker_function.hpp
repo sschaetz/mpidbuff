@@ -61,6 +61,8 @@
 
 
 // macro to generate worker function ___________________________________________
+// _____________________________________________________________________________
+// _____________________________________________________________________________
 
 #define WORKER_FUNCTION(returntype, functionname, parameters)                  \
 namespace masterworker                                                         \
@@ -90,7 +92,6 @@ class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
  public:                                                                       \
   BOOST_PP_CAT(functionname, _wrapper) () {}                                   \
   BOOST_PP_CAT(functionname, _wrapper) (T t_) : t(t_) {}                       \
-  translate_return_type< returntype > ::type r;                                \
   void execute(boost::mpi::communicator & comm, int root = 0)                  \
   {                                                                            \
                                                                                \
@@ -109,9 +110,10 @@ class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
     r = invoke(f2, t);                                                         \
     boost::mpi::gather(comm, r, root);                                         \
   }                                                                            \
-  T t;                                                                         \
                                                                                \
  private:                                                                      \
+  translate_return_type< returntype > ::type r;                                \
+  T t;                                                                         \
   friend class boost::serialization::access;                                   \
   template<class Archive>                                                      \
   void serialize(Archive & ar, const unsigned int version)                     \
@@ -155,7 +157,8 @@ BOOST_CLASS_EXPORT_IMPLEMENT(worker:: functionname ::wrapper_type);            \
 BOOST_CLASS_EXPORT_KEY(worker:: functionname ::wrapper_type);                  \
                                                                                \
                                                                                \
-translate_return_type< returntype > ::type functionname ::operator()(          \
+translate_return_type< returntype > ::type masterworker::                      \
+ functionname ::operator()(                                                    \
     BOOST_PP_TUPLE_ELEM(                                                       \
       2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
     )                                                                          \
@@ -169,6 +172,9 @@ translate_return_type< returntype > ::type functionname ::operator()(          \
 
 
 // macro to generate worker function without return type _______________________
+// _____________________________________________________________________________
+// _____________________________________________________________________________
+
 
 #define WORKER_VOID_FUNCTION(functionname, parameters)                         \
 namespace masterworker                                                         \
@@ -176,7 +182,8 @@ namespace masterworker                                                         \
 struct functionname                                                            \
 {                                                                              \
   functionname (boost::mpi::communicator & comm_, int root_) :                 \
-  comm(comm_), root(root_){}                                                   \
+  comm(comm_), root(root_),                                                    \
+  workers(comm_.group().exclude(root_, root_+1)) {}                            \
                                                                                \
   void operator()(                                                             \
     BOOST_PP_TUPLE_ELEM(                                                       \
@@ -190,6 +197,7 @@ struct functionname                                                            \
     )                                                                          \
   );                                                                           \
   boost::mpi::communicator comm;                                               \
+  boost::mpi::communicator workers;                                            \
   int root;                                                                    \
 };                                                                             \
 template <typename T>                                                          \
@@ -198,7 +206,6 @@ class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
  public:                                                                       \
   BOOST_PP_CAT(functionname, _wrapper) () {}                                   \
   BOOST_PP_CAT(functionname, _wrapper) (T t_) : t(t_) {}                       \
-  int r;                                                                       \
   void execute(boost::mpi::communicator & comm, int root = 0)                  \
   {                                                                            \
                                                                                \
@@ -218,9 +225,10 @@ class BOOST_PP_CAT(functionname, _wrapper) : public masterworker::base         \
     r = 0;                                                                     \
     boost::mpi::gather(comm, r, root);                                         \
   }                                                                            \
-  T t;                                                                         \
                                                                                \
  private:                                                                      \
+  int r;                                                                       \
+  T t;                                                                         \
   friend class boost::serialization::access;                                   \
   template<class Archive>                                                      \
   void serialize(Archive & ar, const unsigned int version)                     \
@@ -264,7 +272,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(worker:: functionname ::wrapper_type);            \
 BOOST_CLASS_EXPORT_KEY(worker:: functionname ::wrapper_type);                  \
                                                                                \
                                                                                \
-void functionname ::operator()(                                                \
+void masterworker:: functionname ::operator()(                                 \
     BOOST_PP_TUPLE_ELEM(                                                       \
       2, 0, BOOST_PP_SEQ_HEAD(MASTER_WORKER_PE(parameters))                    \
     )                                                                          \
