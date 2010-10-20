@@ -1,37 +1,39 @@
 #include <vector>
 #include <algorithm>
+#include <cstring>
+#include <numeric>
 
 #include <boost/fusion/container/generation/make_vector.hpp>
 #include <boost/fusion/include/make_vector.hpp>
 
+#include <lib/window.hpp>
 #include <lib/masterworker/masterworker.hpp>
 
+#define PACKAGES 24
+
 using namespace masterworker;
-
-WORKER_FUNCTION(int, func3, (int, i) (int, j))
-{
-  std::cout << "OH MY GOD IT'S FUNC3!!" << i << j << std::endl;
-  return 2;
-}
-
-WORKER_FUNCTION(int, func4, (int, i) (const double &, j))
-{
-  std::cout << "OH MY GOD IT'S FUNC4!!!!" << i << j << std::endl;
-  return 1;
-}
-
-WORKER_FUNCTION(void, func5, (const int, i) (double &, j))
-{
-  std::cout << "OH MY GOD IT'S FUNC5!!!!" << i << j << std::endl;
-}
-
-WORKER_VOID_FUNCTION(func6, (const int, i) (double &, j))
-{
-  std::cout << "OH MY GOD IT'S FUNC5!!!!" << i << j << std::endl;
-}
-
 namespace mpi = boost::mpi;
 using namespace boost::fusion;
+
+WORKER_FUNCTION(float, workerfunc, (std::size_t, size))
+{
+
+  float result = 0.0;
+  std::vector<float> data(size, 0.0);
+  mpi::window win(&*data.begin(), 1024, comm);
+  int iterations = size / 1024 / (comm.size()-1);
+  int offset = iterations * 1024 * (comm.rank()-1);
+
+  for(int i=0; i<iterations; i++)
+  {
+    win.lock(mpi::lock_shared, 0);
+    win.get(&*data.begin(), 1024, 0, offset + i * 1024);
+    win.unlock(0);
+    result += std::accumulate(data.begin(), data.end(), 0);
+  }
+
+  return result;
+}
 
 template <typename T>
 void printvector(T i)
@@ -39,6 +41,22 @@ void printvector(T i)
   std::cout << " " << i;
 }
 
+void masterloop(boost::mpi::communicator & comm)
+{
+  std::vector<float> data(1024*PACKAGES, 1.0);
+
+  run_async<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
+
+  {
+    mpi::window win((float*)&data[0], 1024*PACKAGES, comm);
+  }
+
+  std::vector<worker::workerfunc::return_type> v =
+    sync<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
+  std::cout << "Accumulated result: " <<
+    std::accumulate(v.begin(), v.end(), 0) << std::endl;
+  quit(comm);
+}
 
 int main(int argc, char* argv[])
 {
@@ -46,26 +64,16 @@ int main(int argc, char* argv[])
   mpi::environment env(argc, argv);
   mpi::communicator world;
 
+  if(world.size() < 3 || (world.size() % 2) != 1)
+  {
+    std::cout << "Launch this test with a number of node that "
+      "divides PACKAGES without rest +1 (for master node)" << std::endl;
+    exit(1);
+  }
+
   if(world.rank() == 0)
   {
-    std::vector<int> f3 = run<worker::func3>(make_vector(42, 110), world);
-    std::cout << "f3 returns: ";
-    for_each (f3.begin(), f3.end(), printvector<int>);
-    std::cout << std::endl << "f4 returns: ";
-
-    std::vector<worker::func4::return_type> f4 =
-      run<worker::func4>(make_vector(42, 110.999), world);
-    for_each (f4.begin(), f4.end(), printvector<int>);
-    std::cout << std::endl;
-
-    run<worker::func5>(make_vector(42, 110.999), world);
-
-    std::vector<worker::func6::return_type> f6 =
-      run<worker::func6>(make_vector(42, 110.999), world);
-    for_each (f6.begin(), f6.end(), printvector<int>);
-    std::cout << std::endl;
-
-    quit(world);
+    masterloop(world);
   }
   else if(world.rank() != 0)
   {

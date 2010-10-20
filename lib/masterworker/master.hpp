@@ -28,6 +28,32 @@ namespace masterworker
     return ret;
   }
 
+  template <typename T>
+  void
+  run_async(typename T::vector_type myvec, boost::mpi::communicator & comm)
+  {
+    typedef typename T::wrapper_type wrapper_type;
+
+    masterworker::wrapper
+      w(boost::shared_ptr< wrapper_type >(new wrapper_type(myvec)));
+                                                              // start execution
+    mpi_broadcast_workaround(comm, w, comm.rank());
+  }
+
+
+  template <typename T>
+  std::vector<typename T::return_type>
+  sync(typename T::vector_type myvec, boost::mpi::communicator & comm)
+  {
+    typedef typename T::return_type return_type;
+    return_type r;
+    std::vector<return_type> ret;
+    boost::mpi::gather(comm, r, ret, comm.rank());
+    ret.erase(ret.begin());
+    return ret;
+  }
+
+
   inline void quit(boost::mpi::communicator & comm)
   {
     masterworker::wrapper q;
