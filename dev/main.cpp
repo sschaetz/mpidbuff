@@ -3,6 +3,8 @@
 #include <cstring>
 #include <numeric>
 
+#include <boost/timer.hpp>
+
 #include <boost/fusion/container/generation/make_vector.hpp>
 #include <boost/fusion/include/make_vector.hpp>
 
@@ -45,6 +47,7 @@ void masterloop(boost::mpi::communicator & comm)
 {
   std::vector<float> data(1024*PACKAGES, 1.0);
 
+  boost::timer time;
   run_async<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
 
   {
@@ -52,9 +55,10 @@ void masterloop(boost::mpi::communicator & comm)
   }
 
   std::vector<worker::workerfunc::return_type> v =
-    sync<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
+    sync<worker::workerfunc>(comm);
   std::cout << "Accumulated result: " <<
-    std::accumulate(v.begin(), v.end(), 0) << std::endl;
+    std::accumulate(v.begin(), v.end(), 0) << " took " << time.elapsed() <<
+    std::endl;
   quit(comm);
 }
 

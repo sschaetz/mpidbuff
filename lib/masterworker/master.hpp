@@ -37,7 +37,7 @@ namespace masterworker
     return_type r;
     std::vector<return_type> ret;
     boost::mpi::gather(comm, r, ret, comm.rank());
-    res.erase(rest.begin()+comm.rank());
+    ret.erase(ret.begin()+comm.rank());
     return ret;
   }
 
@@ -83,7 +83,7 @@ namespace masterworker
     return_type r;
     std::vector<return_type> ret;
     boost::mpi::gather(comm, r, ret, comm.rank());
-    res.erase(rest.begin()+comm.rank());
+    ret.erase(ret.begin()+comm.rank());
     return ret;
   }
 
