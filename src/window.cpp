@@ -23,7 +23,7 @@ window::window(const void * base, int size, int disp_unit,
 // _____________________________________________________________________________
 
 void window::create_window_impl(const void * base, int size, int disp_unit,
-                                communicator & comm, bool no_locks)
+                                const communicator & comm, bool no_locks)
 {
   MPI_Info info;
   BOOST_MPI_CHECK_RESULT(MPI_Info_create, (&info));

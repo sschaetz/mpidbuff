@@ -42,7 +42,7 @@ class BOOST_MPI_DECL window
    * Create window on array of values
    */
   template<typename T>
-  window(const T * base, int n, communicator & comm, bool no_locks = false);
+  window(const T * base, int n, const communicator & comm, bool no_locks = false);
 
   /**
    * Create window on block of memory
@@ -158,7 +158,7 @@ class BOOST_MPI_DECL window
  private:
 
   void create_window_impl(const void * base, int size, int disp_unit,
-                          communicator & comm, bool no_locks = false);
+                          const communicator & comm, bool no_locks = false);
 
   void put_impl(const void * origin_addr, int origin_count,
                 MPI_Datatype origin_datatype, int target_rank, int target_disp,
@@ -226,7 +226,7 @@ window::window(const T& base, communicator & comm, bool no_locks)
 // _____________________________________________________________________________
 
 template<typename T>
-window::window(const T * base, int n, communicator & comm, bool no_locks)
+window::window(const T * base, int n, const communicator & comm, bool no_locks)
 {
   create_window_impl((void *) base, sizeof(T)*n, sizeof(T), comm, no_locks);
 }

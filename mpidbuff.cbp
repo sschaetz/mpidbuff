@@ -57,6 +57,12 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 			</Target>
+			<Target title="test_dev">
+				<Option output="bin/test/test_dev" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/test" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -71,6 +77,9 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="dev/main.cpp">
+			<Option target="test_dev" />
+		</Unit>
+		<Unit filename="dev/main_iterator.cpp">
 			<Option target="test_iterator" />
 		</Unit>
 		<Unit filename="ext/fusion/serialization/include.hpp" />

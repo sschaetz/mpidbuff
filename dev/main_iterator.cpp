@@ -7,15 +7,21 @@
 
 #include <boost/fusion/container/generation/make_vector.hpp>
 #include <boost/fusion/include/make_vector.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include <lib/window.hpp>
 #include <lib/masterworker/masterworker.hpp>
 
-#define PACKAGES 24
+#include <dev/async_remote_range.hpp>
+
+#define PACKAGES 512
 
 using namespace masterworker;
 namespace mpi = boost::mpi;
 using namespace boost::fusion;
+using namespace boost::lambda;
+
 
 WORKER_FUNCTION(float, workerfunc, (std::size_t, size))
 {
@@ -47,7 +53,27 @@ void masterloop(boost::mpi::communicator & comm)
 {
   std::vector<float> data(1024*PACKAGES, 1.0);
 
+  async_remote_range<float>
+    r(PACKAGES, 1024, (PACKAGES/4 * (_1-1) + _2), comm);
+
+  r.init(boost::iterator_range<std::vector<float>::iterator>
+         (data.begin(), data.end()));
+
   boost::timer time;
+  double time_elapsed = 0.0;
+
+  for(int i=0; i<9; i++)
+  {
+    run_async<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
+
+    {
+      mpi::window win((float*)&data[0], 1024*PACKAGES, comm);
+    }
+
+    std::vector<worker::workerfunc::return_type> v =
+      sync<worker::workerfunc>(comm);
+  }
+
   run_async<worker::workerfunc>(make_vector(1024*PACKAGES), comm);
 
   {
@@ -57,10 +83,21 @@ void masterloop(boost::mpi::communicator & comm)
   std::vector<worker::workerfunc::return_type> v =
     sync<worker::workerfunc>(comm);
 
+  time_elapsed = time.elapsed();
   std::cout << "Accumulated result: " <<
-    std::accumulate(v.begin(), v.end(), 0) << " took " << time.elapsed() <<
-    std::endl;
+    std::accumulate(v.begin(), v.end(), 0) << " took " <<
+    std::setprecision(9) << time_elapsed << std::endl;
   quit(comm);
+
+  time_elapsed = time.elapsed();
+  worker::workerfunc::return_type v2;
+  for(int i=0; i<10; i++)
+  {
+    v2 += std::accumulate(data.begin(), data.end(), 0);
+  }
+  time_elapsed = time.elapsed() - time_elapsed;
+  std::cout << "Accumulated result: " << v2/10 << " took " <<
+    std::setprecision(9) << time_elapsed << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -86,4 +123,5 @@ int main(int argc, char* argv[])
   }
 
 }
+
 
